@@ -1,10 +1,9 @@
 import 'dart:convert';
-import 'package:final_640710065/helpers/my_list_tile.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import '../helpers/api_caller.dart';
-import '../models/todo_item.dart';
-import '../helpers/my_text_field.dart';
+import 'package:final_640710065/helpers/api_caller.dart';
+import 'package:final_640710065/helpers/my_list_tile.dart';
+import 'package:final_640710065/models/todo_item.dart';
+import 'package:final_640710065/helpers/my_text_field.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -41,35 +40,39 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> postData() async {
-    final selectedItemId =
-        _selectedItemIndex != -1 ? _items[_selectedItemIndex].id : null;
-    final firstTextFieldValue = _firstTextFieldController.text;
-    final secondTextFieldValue = _secondTextFieldController.text;
+    if (_selectedItemIndex == -1) {
+      // No item selected, return early
+      return;
+    }
+
+    final selectedItemId = _items[_selectedItemIndex].id;
+    final url = _firstTextFieldController.text;
+    final details = _secondTextFieldController.text;
 
     final Map<String, dynamic> postData = {
-      'firstTextField': firstTextFieldValue,
-      'secondTextField': secondTextFieldValue,
-      'selectedItemId': selectedItemId,
+      'URL': url,
+      'รายละเอียด': details,
+      'id': selectedItemId,
     };
 
-    final response = await http.post(
-      Uri.parse(
-          'https://cpsu-api-49b593d4e146.herokuapp.com/api/2_2566/final/report_web'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(postData),
-    );
-
-    if (response.statusCode == 200) {
-      // Post request successful
-      print('Data posted successfully');
-    } else {
-      // Post request failed
-      throw Exception('Failed to post data');
+    try {
+      final apiCaller = ApiCaller();
+      final response = await apiCaller.post('api/2_2566/final/report_web', params: postData);
+      print('Post response: $response');
+      
+      // Optional: Display a success message
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Data posted successfully!'),
+      ));
+    } catch (e) {
+      // Handle errors
+      print('Failed to post data: $e');
+      // Optional: Display an error message
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Failed to post data: $e'),
+      ));
     }
   }
-  
 
   @override
   Widget build(BuildContext context) {
